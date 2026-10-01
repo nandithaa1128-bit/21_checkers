@@ -12,6 +12,28 @@ class Checkers:
         for r, row in enumerate(self.board):
             print(f"{r}  " + " ".join(row))
 
+    def has_pieces(self, player):
+        return any(
+            cell in (player, player + "K")
+            for row in self.board
+            for cell in row
+        )
+
+    def has_legal_move(self, player):
+        for sr in range(SIZE):
+            for sc in range(SIZE):
+                if self.board[sr][sc] not in (player, player + "K"):
+                    continue
+
+                for er in range(SIZE):
+                    for ec in range(SIZE):
+                        if capture_move(self.board, player, (sr, sc), (er, ec)):
+                            return True
+                        if simple_move(self.board, player, (sr, sc), (er, ec)):
+                            return True
+
+        return False
+
     def run(self):
         print("Checkers — move: sr sc er ec")
         while True:
@@ -37,7 +59,7 @@ class Checkers:
             start, end = (sr, sc), (er, ec)
             if capture_move(self.board, self.player, start, end):
                 move_piece(self.board, start, end)
-                (sr + er) // 2
+                mr = (sr + er) // 2
                 mc = (sc + ec) // 2
                 self.board[mr][mc] = "."
             elif simple_move(self.board, self.player, start, end):
@@ -47,4 +69,16 @@ class Checkers:
                 continue
 
             promote(self.board)
-            self.player = "B" if self.player == "R" else "R"
+            opponent = "B" if self.player == "R" else "R"
+
+            if not self.has_pieces(opponent):
+                self.print_board()
+                print(f"{self.player} wins! {opponent} has no pieces.")
+                return
+
+            if not self.has_legal_move(opponent):
+                self.print_board()
+                print(f"{self.player} wins! {opponent} has no legal moves.")
+                return
+
+            self.player = opponent
