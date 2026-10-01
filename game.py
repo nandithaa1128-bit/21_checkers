@@ -45,7 +45,6 @@ class Checkers:
 
                 for er in range(SIZE):
                     for ec in range(SIZE):
-
                         if capture_move(
                             self.board,
                             player,
@@ -90,6 +89,17 @@ class Checkers:
         mc = (sc + ec) // 2
         self.board[mr][mc] = "."
 
+    def check_promotion(self, player, position):
+        r, c = position
+
+        before = self.board[r][c]
+
+        promote(self.board)
+
+        after = self.board[r][c]
+
+        return before == player and after == player + "K"
+
     def run(self):
         print("Checkers — move: sr sc er ec")
 
@@ -130,7 +140,7 @@ class Checkers:
             start = (sr, sc)
             end = (er, ec)
 
-            # Check whether the player has any capture available.
+            # Check whether any capture is available.
             must_capture = self.has_capture(self.player)
 
             # -------------------------------------------------
@@ -144,13 +154,27 @@ class Checkers:
             ):
                 self.make_capture(start, end)
 
-                # Check for promotion.
-                promote(self.board)
+                print(
+                    f"{self.player} captured from "
+                    f"({sr}, {sc}) to ({er}, {ec})."
+                )
 
-                # The same piece must continue capturing
-                # if another capture is available.
+                # Check promotion after capture.
+                was_promoted = self.check_promotion(
+                    self.player,
+                    end
+                )
+
+                if was_promoted:
+                    print(
+                        f"{self.player} piece promoted to king."
+                    )
+
                 current_position = end
 
+                # -------------------------------------------------
+                # MULTIPLE CAPTURE
+                # -------------------------------------------------
                 while self.has_piece_capture(
                     self.player,
                     current_position
@@ -175,16 +199,16 @@ class Checkers:
                         print("Coordinates must be numbers.")
                         continue
 
-                    if (
-                        (nsr, nsc) != current_position
-                        or not all(
-                            0 <= x < SIZE
-                            for x in (nsr, nsc, ner, nec)
-                        )
+                    if not all(
+                        0 <= x < SIZE
+                        for x in (nsr, nsc, ner, nec)
                     ):
+                        print("Outside board.")
+                        continue
+
+                    if (nsr, nsc) != current_position:
                         print(
-                            "You must continue with the "
-                            "same piece."
+                            "You must continue with the same piece."
                         )
                         continue
 
@@ -208,7 +232,21 @@ class Checkers:
                         next_end
                     )
 
-                    promote(self.board)
+                    print(
+                        f"{self.player} captured from "
+                        f"({nsr}, {nsc}) to "
+                        f"({ner}, {nec})."
+                    )
+
+                    was_promoted = self.check_promotion(
+                        self.player,
+                        next_end
+                    )
+
+                    if was_promoted:
+                        print(
+                            f"{self.player} piece promoted to king."
+                        )
 
                     current_position = next_end
 
@@ -234,7 +272,20 @@ class Checkers:
                     end
                 )
 
-                promote(self.board)
+                print(
+                    f"{self.player} moved from "
+                    f"({sr}, {sc}) to ({er}, {ec})."
+                )
+
+                was_promoted = self.check_promotion(
+                    self.player,
+                    end
+                )
+
+                if was_promoted:
+                    print(
+                        f"{self.player} piece promoted to king."
+                    )
 
             # -------------------------------------------------
             # INVALID MOVE
